@@ -44,8 +44,8 @@ export const useAuth = create<AuthState>()((set, get) => ({
         body,
       });
 
-      if (!response.ok) {
-        throw new Error("Something went wrong while user logging");
+      if (!response.ok && response.status === 401) {
+        throw new Error("Incorrect username or password");
       }
 
       const { access_token } = await response.json();
@@ -56,7 +56,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
       set({ token: access_token, user: userInfo });
     } catch (error) {
       console.log(error);
-      throw new Error("Something went wrong while user logging");
+      throw new Error((error as any).message);
     }
   },
   register: async (name, email, password) => {

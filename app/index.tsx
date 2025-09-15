@@ -24,13 +24,20 @@ export default function Index() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
+  const handleErrorMessage = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => {
+      setErrorMessage("");
+    }, 3000);
+  };
+
   const handleRegister = async () => {
     if (
       !userInfo.email.trim() ||
       !userInfo.email.trim() ||
       !userInfo.password.trim()
     ) {
-      return setErrorMessage("you must complete all fields");
+      return handleErrorMessage("you must complete all fields");
     }
 
     setIsLoading(true);
@@ -43,7 +50,7 @@ export default function Index() {
         password: "",
       });
     } catch (err) {
-      setErrorMessage((err as any).message);
+      handleErrorMessage((err as any).message);
     } finally {
       setIsLoading(false);
     }
@@ -51,10 +58,8 @@ export default function Index() {
 
   const handleLogin = async () => {
     if (!userInfo.email.trim() || !userInfo.password.trim()) {
-      return setErrorMessage("you must complete all fields");
+      return handleErrorMessage("You must complete all fields");
     }
-
-    console.log(userInfo);
 
     setIsLoading(true);
     try {
@@ -66,7 +71,7 @@ export default function Index() {
         password: "",
       });
     } catch (err) {
-      setErrorMessage((err as any).message);
+      handleErrorMessage((err as any).message);
     } finally {
       setIsLoading(false);
     }
@@ -102,10 +107,11 @@ export default function Index() {
             onChangeText={(val) => {
               setUserInfo((prev) => ({ ...prev, name: val }));
             }}
-            placeholder="Full name"
+            placeholder="Name"
             autoCapitalize="none"
             autoCorrect={false}
             editable={!isLoading}
+            placeholderTextColor="#000"
             style={styles.input}
           />
         )}
@@ -118,6 +124,7 @@ export default function Index() {
           autoCapitalize="none"
           autoCorrect={false}
           editable={!isLoading}
+          placeholderTextColor="#000"
           style={styles.input}
         />
         <TextInput
@@ -130,9 +137,19 @@ export default function Index() {
           autoCapitalize="none"
           autoCorrect={false}
           editable={!isLoading}
+          placeholderTextColor="#000"
           style={styles.input}
         />
-
+        {errorMessage.length > 0 && (
+          <Text
+            style={{
+              color: "#a83e32",
+              fontWeight: "bold",
+            }}
+          >
+            {errorMessage}
+          </Text>
+        )}
         <TouchableOpacity
           onPress={() => {
             if (isLogin) {
@@ -166,7 +183,16 @@ export default function Index() {
         </TouchableOpacity>
         <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
           <Text style={{ fontSize: 16 }}>Are you already have an account?</Text>
-          <TouchableOpacity onPress={() => setIsLogin((prev) => !prev)}>
+          <TouchableOpacity
+            onPress={() => {
+              setIsLogin((prev) => !prev);
+              setUserInfo({
+                name: "",
+                email: "",
+                password: "",
+              });
+            }}
+          >
             <Text
               style={{
                 textDecorationLine: "underline",
@@ -188,5 +214,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(196,194,194,0.8)",
     borderRadius: 8,
     width: "100%",
+    color: "#000",
   },
 });
