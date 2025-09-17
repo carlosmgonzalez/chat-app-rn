@@ -1,4 +1,4 @@
-import { useAuth } from "@/store/auth";
+import { useAuth } from "@/store/auth-store";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 

@@ -1,4 +1,4 @@
-import { useChat, User } from "@/store/chat";
+import { useChat, User } from "@/store/chat-store";
 import { router } from "expo-router";
 import { ArrowRight, Search } from "lucide-react-native";
 import { useState } from "react";
@@ -12,12 +12,8 @@ import {
 
 export default function Chat() {
   const [userEmail, setUserEmail] = useState("");
-  const [userFound, setUserFound] = useState<User | null>({
-    id: "3929e99fjh9ajhf90",
-    name: "Bretta Abril Medina",
-    email: "Bretta@gmail.com",
-  });
-  const { searchUser } = useChat();
+  const [userFound, setUserFound] = useState<User | null>();
+  const { searchUser, createNewChat } = useChat();
 
   const handleSearchUser = async (email: string) => {
     const user = await searchUser(email);
@@ -52,8 +48,16 @@ export default function Chat() {
 
       {userFound && (
         <TouchableOpacity
-          onPress={() => {
-            router.push(`/chat/6cddd026-bfac-4369-9112-0ddbb8fb7435`);
+          onPress={async () => {
+            const chat = await createNewChat(userFound.email);
+            if (!chat) return;
+            router.push({
+              pathname: "/chat/[chatId]",
+              params: {
+                chatId: chat.id,
+                userName: userFound.name,
+              },
+            });
           }}
           style={{
             backgroundColor: "rgba(230,230,230,1)",

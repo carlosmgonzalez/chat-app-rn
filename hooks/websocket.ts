@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { WS_URL } from "@/utlis/constants";
+import { useCallback, useEffect, useState } from "react";
 
 // Define types for better safety and autocompletion
 type MessageHandler = (data: any) => void;
@@ -17,10 +18,12 @@ class WebSocketManager {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
 
+  private messageQueue: object[] = []; // Cola para mensajes pendientes
+
   // Callback to notify React hooks about connection status changes
   public onConnectionChange: ConnectionChangeCallback | null = null;
 
-  connect(userId: string, wsUrl = "wss://e70c3c283ffd.ngrok-free.app") {
+  connect(userId: string, wsUrl = WS_URL) {
     if (this.ws && this.isConnected && this.userId === userId) {
       console.log("WebSocket ya conectado para este usuario.");
       return;
@@ -41,6 +44,9 @@ class WebSocketManager {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.onConnectionChange?.(true);
+
+        // Procesa la cola de mensajes pendientes
+        this.processMessageQueue();
       };
 
       this.ws.onmessage = (event: MessageEvent) => {
@@ -80,7 +86,9 @@ class WebSocketManager {
       const delay = Math.pow(2, this.reconnectAttempts - 1) * 1000; // Exponential backoff
 
       console.log(
-        `Reintentando conexión... (${this.reconnectAttempts}/${this.maxReconnectAttempts}) en ${delay / 1000}s`,
+        `Reintentando conexión... (${this.reconnectAttempts}/${
+          this.maxReconnectAttempts
+        }) en ${delay / 1000}s`
       );
       setTimeout(() => {
         if (this.userId) {
@@ -116,13 +124,22 @@ class WebSocketManager {
     };
   }
 
+  private processMessageQueue() {
+    while (this.messageQueue.length > 0) {
+      const message = this.messageQueue.shift(); // Saca el primer mensaje
+      if (message) {
+        this.send(message);
+      }
+    }
+  }
+
   private send(data: object) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     } else {
-      console.warn(
-        "WebSocket no está conectado. El mensaje no se pudo enviar.",
-      );
+      // Si no, guarda el mensaje para enviarlo más tarde
+      console.warn("WebSocket no está conectado. Poniendo el mensaje en cola.");
+      this.messageQueue.push(data);
     }
   }
 
@@ -134,7 +151,10 @@ class WebSocketManager {
     this.send({ type: "unsubscribe_chat", chat_id: chatId });
   }
 
-  sendMessage(chatId: string, content: string) {
+  sendMessage(
+    chatId: string,
+    content: { message: string; created_at: number | Date }
+  ) {
     this.send({ type: "send_message", chat_id: chatId, content });
   }
 
@@ -185,25 +205,25 @@ export const useWebSocket = (userId: string | null) => {
   // Memoize returned functions for performance, preventing unnecessary re-renders
   const subscribeToChat = useCallback(
     (chatId: string) => webSocketManager.subscribeToChat(chatId),
-    [],
+    []
   );
   const unsubscribeFromChat = useCallback(
     (chatId: string) => webSocketManager.unsubscribeFromChat(chatId),
-    [],
+    []
   );
   const sendMessage = useCallback(
-    (chatId: string, content: string) =>
+    (chatId: string, content: { message: string; created_at: number | Date }) =>
       webSocketManager.sendMessage(chatId, content),
-    [],
+    []
   );
   const sendTyping = useCallback(
     (chatId: string) => webSocketManager.sendTyping(chatId),
-    [],
+    []
   );
   const on = useCallback(
     (messageType: string, handler: MessageHandler) =>
       webSocketManager.on(messageType, handler),
-    [],
+    []
   );
 
   return {

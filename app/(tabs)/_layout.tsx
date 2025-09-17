@@ -1,4 +1,4 @@
-import { useAuth } from "@/store/auth";
+import { useAuth } from "@/store/auth-store";
 import { Redirect, Tabs } from "expo-router";
 import { MessageSquare, User } from "lucide-react-native";
 

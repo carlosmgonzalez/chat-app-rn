@@ -16,6 +16,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>;
 }
 
 export const useAuth = create<AuthState>()((set, get) => ({
@@ -86,5 +87,22 @@ export const useAuth = create<AuthState>()((set, get) => ({
   logout: async () => {
     await SecureStore.setItemAsync("token", "");
     set({ token: null, user: null });
+  },
+  fetchWithAuth: async (url: string, options: RequestInit) => {
+    const accessToken = get().token;
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.status === 401) {
+      console.log("Api request failed with 401, attempting to refresh token");
+    }
+
+    return response;
   },
 }));
