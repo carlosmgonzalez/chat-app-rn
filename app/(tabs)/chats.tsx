@@ -1,4 +1,5 @@
 import { useChat, User } from "@/store/chat";
+import { router } from "expo-router";
 import { ArrowRight, Search } from "lucide-react-native";
 import { useState } from "react";
 import {
@@ -51,6 +52,9 @@ export default function Chat() {
 
       {userFound && (
         <TouchableOpacity
+          onPress={() => {
+            router.push(`/chat/6cddd026-bfac-4369-9112-0ddbb8fb7435`);
+          }}
           style={{
             backgroundColor: "rgba(230,230,230,1)",
             borderRadius: 8,
