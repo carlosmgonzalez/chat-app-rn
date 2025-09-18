@@ -1,9 +1,9 @@
-import { useAuth } from "@/store/auth-store";
+import { useAuthStore } from "@/store/auth-store";
 import { Redirect, Tabs } from "expo-router";
 import { MessageSquare, User } from "lucide-react-native";
 
 export default function TabLayout() {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   if (!user) {
     return <Redirect href="/" />;

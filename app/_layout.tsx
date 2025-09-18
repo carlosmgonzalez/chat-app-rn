@@ -1,11 +1,11 @@
-import { useAuth } from "@/store/auth-store";
+import { useAuthStore } from "@/store/auth-store";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { View } from "react-native";
 
 export default function RootLayout() {
-  const { checkAuth } = useAuth();
+  const { checkAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();

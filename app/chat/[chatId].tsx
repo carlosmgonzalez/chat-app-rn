@@ -1,69 +1,45 @@
-import { useWebSocket } from "@/hooks/websocket";
-import { useAuth } from "@/store/auth-store";
-import { BASE_URL } from "@/utlis/constants";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useAuthStore } from "@/store/auth-store";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import { GiftedChat, QuickReplies, User } from "react-native-gifted-chat";
+import { GiftedChat } from "react-native-gifted-chat";
+import type { Message } from "@/types/chat-types";
+import { useChat } from "@/hooks/use-chat";
 
-export interface IMessage {
-  _id: string | number;
-  text: string;
-  createdAt: Date | number;
-  user: User;
-  image?: string;
-  video?: string;
-  audio?: string;
-  system?: boolean;
-  sent?: boolean;
-  received?: boolean;
-  pending?: boolean;
-  quickReplies?: QuickReplies;
-}
-
-export interface IChat {
-  id: string;
-  type: string;
-  name: string;
-  created_at: Date;
-  users: User[];
-  messages: MessageChat[];
-}
-
-export interface MessageChat {
-  id: string;
-  content: string;
-  sent_at: Date;
-  sender: User;
-}
-
-export default function Chat() {
+export default function ChatPage() {
   const { chatId, userName }: { chatId: string; userName: string } =
     useLocalSearchParams();
-  const [messages, setMessages] = useState<IMessage[]>([]);
+
+  const { getChat } = useChat();
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    const getChatInformation = async () => {
-      const res = await fetch(`${BASE_URL}/chat/${chatId}`);
-      const chat = (await res.json()) as IChat;
-
-      setMessages(
-        chat.messages.map((message) => ({
-          _id: message.id,
-          createdAt: new Date(message.sent_at),
-          text: message.content,
-          user: {
-            _id: String(message.sender._id),
-          },
-        })),
-      );
+    // This effect fetches the initial chat history and ensures it's only done once
+    // and that the message list is cleared when the chat changes.
+    let isCancelled = false;
+    const getChatHistory = async () => {
+      const chatHistory = await getChat(chatId);
+      if (!isCancelled) {
+        // Use an empty array as the first argument to replace existing messages,
+        // preventing duplicates if the effect runs multiple times.
+        setMessages(GiftedChat.append([], chatHistory));
+      }
     };
 
-    getChatInformation();
-  }, [chatId]);
+    getChatHistory();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [chatId, getChat]);
 
   const [typingUsers, setTypingUsers] = useState<any[]>([]);
-  const { user } = useAuth();
+  const handleTyping = () => {
+    sendTyping(chatId);
+  };
+
+  const { user } = useAuthStore();
   const {
     isConnected,
     subscribeToChat,
@@ -83,10 +59,10 @@ export default function Chat() {
         unsubscribeFromChat(chatId);
       }
     };
-  }, [chatId, isConnected]);
+  }, [chatId, isConnected, subscribeToChat, unsubscribeFromChat]);
 
   useEffect(() => {
-    // Manejar nuevos mensajes
+    // Handle new messages from other users
     const unsubscribeMessages = on("new_message", (data) => {
       if (data.chat_id === chatId) {
         setMessages((previousMessages) =>
@@ -96,8 +72,8 @@ export default function Chat() {
               text: data.content.message,
               createdAt: data.content.created_at,
               user: {
-                _id: data.user_id,
-                name: data.name,
+                _id: data.sender.id,
+                name: data.sender.name,
               },
             },
           ]),
@@ -105,7 +81,7 @@ export default function Chat() {
       }
     });
 
-    // Manejar indicadores de escritura
+    // Handle typing indicators
     const unsubscribeTyping = on("typing", (data) => {
       if (data.chat_id === chatId) {
         setTypingUsers((prev) => {
@@ -115,7 +91,7 @@ export default function Chat() {
           return prev;
         });
 
-        // Quitar indicador después de 3 segundos
+        // Remove typing indicator after 3 seconds
         setTimeout(() => {
           setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
         }, 3000);
@@ -128,18 +104,13 @@ export default function Chat() {
     };
   }, [chatId, on]);
 
-  const handleTyping = () => {
-    sendTyping(chatId);
-  };
-
   const onSend = useCallback(
-    (messages: IMessage[] = []) => {
-      console.log(messages);
+    (messages: Message[] = []) => {
       const content = {
         message: messages[0].text,
-        created_at: messages[0].createdAt,
       };
       sendMessage(chatId, content);
+      // Optimistically update the UI with the new message
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, messages),
       );
@@ -148,13 +119,16 @@ export default function Chat() {
   );
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           title: userName,
         }}
       />
       <GiftedChat
+        messagesContainerStyle={{
+          paddingBottom: 10,
+        }}
         messages={messages}
         onSend={(messages) => onSend(messages as any)}
         user={{
@@ -163,6 +137,7 @@ export default function Chat() {
             "https://lh3.googleusercontent.com/a/ACg8ocIQYmDHhfJP4vdqu6d5WhBP-3jnjdossIu91FLVna2Q5SnIinoshg=s96-c",
           name: user!.name,
         }}
+        keyboardShouldPersistTaps="never"
         renderMessage={({ currentMessage }) => {
           const isMyMessage = currentMessage.user._id === user!.id;
           return (
@@ -187,17 +162,6 @@ export default function Chat() {
                     shadowOffset: { width: 0, height: 1 },
                   }}
                 >
-                  {!isMyMessage && currentMessage.user.name && (
-                    <Text
-                      style={{
-                        color: "#36b3a6",
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                      }}
-                    >
-                      {currentMessage.user.name}
-                    </Text>
-                  )}
                   <Text style={{ fontSize: 16, color: "#333" }}>
                     {currentMessage.text}
                   </Text>
@@ -218,6 +182,6 @@ export default function Chat() {
           );
         }}
       />
-    </>
+    </View>
   );
 }

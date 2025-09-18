@@ -1,4 +1,4 @@
-import { useAuth } from "@/store/auth-store";
+import { useAuthStore } from "@/store/auth-store";
 import { Redirect } from "expo-router";
 import { useState } from "react";
 import {
@@ -13,7 +13,7 @@ import {
 } from "react-native";
 
 export default function Index() {
-  const { register, login, user } = useAuth();
+  const { register, login, user } = useAuthStore();
   const [userInfo, setUserInfo] = useState({
     name: "",
     email: "",

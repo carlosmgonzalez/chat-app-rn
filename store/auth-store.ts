@@ -2,12 +2,7 @@ import { BASE_URL } from "@/utlis/constants";
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
 import * as jose from "jose";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-};
+import type { User } from "@/types/user-types";
 
 interface AuthState {
   user: User | null;
@@ -19,7 +14,7 @@ interface AuthState {
   fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>;
 }
 
-export const useAuth = create<AuthState>()((set, get) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   token: null,
   checkAuth: async () => {

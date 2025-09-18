@@ -1,9 +1,17 @@
-import { useAuth } from "@/store/auth-store";
+import { useAuthStore } from "@/store/auth-store";
+import { useChatStore } from "@/store/chat-store";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthStore();
+  const { cleanUserChat } = useChatStore();
+
+  const handleLogout = () => {
+    logout();
+    cleanUserChat();
+    router.push("/");
+  };
 
   return (
     <View
@@ -33,10 +41,7 @@ export default function Profile() {
             {user.email}
           </Text>
           <TouchableOpacity
-            onPress={() => {
-              logout();
-              router.push("/");
-            }}
+            onPress={handleLogout}
             style={{
               backgroundColor: "#000",
               borderRadius: 8,

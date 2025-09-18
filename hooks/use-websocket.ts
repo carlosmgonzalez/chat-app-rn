@@ -37,7 +37,7 @@ class WebSocketManager {
     // this.reconnectAttempts = 0; // Reset attempts for a new connection
 
     try {
-      this.ws = new WebSocket(`${wsUrl}/chat/ws/${userId}`);
+      this.ws = new WebSocket(`${wsUrl}/ws/${userId}`);
 
       this.ws.onopen = () => {
         console.log("WebSocket conectado");
@@ -88,7 +88,7 @@ class WebSocketManager {
       console.log(
         `Reintentando conexión... (${this.reconnectAttempts}/${
           this.maxReconnectAttempts
-        }) en ${delay / 1000}s`
+        }) en ${delay / 1000}s`,
       );
       setTimeout(() => {
         if (this.userId) {
@@ -151,10 +151,7 @@ class WebSocketManager {
     this.send({ type: "unsubscribe_chat", chat_id: chatId });
   }
 
-  sendMessage(
-    chatId: string,
-    content: { message: string; created_at: number | Date }
-  ) {
+  sendMessage(chatId: string, content: { message: string }) {
     this.send({ type: "send_message", chat_id: chatId, content });
   }
 
@@ -205,25 +202,25 @@ export const useWebSocket = (userId: string | null) => {
   // Memoize returned functions for performance, preventing unnecessary re-renders
   const subscribeToChat = useCallback(
     (chatId: string) => webSocketManager.subscribeToChat(chatId),
-    []
+    [],
   );
   const unsubscribeFromChat = useCallback(
     (chatId: string) => webSocketManager.unsubscribeFromChat(chatId),
-    []
+    [],
   );
   const sendMessage = useCallback(
-    (chatId: string, content: { message: string; created_at: number | Date }) =>
+    (chatId: string, content: { message: string }) =>
       webSocketManager.sendMessage(chatId, content),
-    []
+    [],
   );
   const sendTyping = useCallback(
     (chatId: string) => webSocketManager.sendTyping(chatId),
-    []
+    [],
   );
   const on = useCallback(
     (messageType: string, handler: MessageHandler) =>
       webSocketManager.on(messageType, handler),
-    []
+    [],
   );
 
   return {
