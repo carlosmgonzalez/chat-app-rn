@@ -21,8 +21,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     const token = await SecureStore.getItemAsync("token");
 
     if (token) {
-      const userInfo = jose.decodeJwt(token) as User;
-      set({ token, user: userInfo });
+      const { exp, ...userInfo } = jose.decodeJwt(token);
+      const currentTime = Math.floor(Date.now() / 1000); // en segundos
+      if (exp && exp < currentTime) {
+        set({ token: null, user: null });
+      } else {
+        set({ token, user: userInfo as User });
+      }
     }
   },
   login: async (email, password) => {

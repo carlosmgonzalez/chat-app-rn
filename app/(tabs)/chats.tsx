@@ -1,8 +1,7 @@
 import { useChat } from "@/hooks/use-chat";
-import { useWebSocket } from "@/hooks/use-websocket";
-import { getChat, getUserChats } from "@/services/chat-service";
+import { useWebSocketStore } from "@/store/websocket-store";
+import { getChats } from "@/services/chat-service";
 import { useAuthStore } from "@/store/auth-store";
-import { useChatStore } from "@/store/chat-store";
 import { UserChats } from "@/types/chat-types";
 import type { User } from "@/types/user-types";
 import { router } from "expo-router";
@@ -20,7 +19,7 @@ import {
 export default function Chat() {
   const { user } = useAuthStore();
   const { searchUser, createNewChat } = useChat();
-  const { on } = useWebSocket(user!.id);
+  const { isConnected, actions } = useWebSocketStore();
 
   const [userEmail, setUserEmail] = useState("");
   const [userFound, setUserFound] = useState<User | null>();
@@ -28,20 +27,37 @@ export default function Chat() {
   const [userChats, setUserChats] = useState<UserChats[]>([]);
 
   useEffect(() => {
-    const getChats = async () => {
+    let isMounted = true;
+    let fetchedChats: UserChats[] = [];
+
+    const getAllChats = async () => {
       try {
-        const chats = await getUserChats();
+        const chats = await getChats();
+        if (!isMounted) return;
+
+        fetchedChats = chats;
         setUserChats(chats);
+
+        if (isConnected) {
+          fetchedChats.forEach((chat) => actions.subscribeToChat(chat.id));
+        }
       } catch (error) {
         console.error(error);
       }
     };
 
-    getChats();
-  }, []);
+    getAllChats();
+
+    return () => {
+      isMounted = false;
+      if (isConnected && fetchedChats.length > 0) {
+        fetchedChats.forEach((chat) => actions.unsubscribeFromChat(chat.id));
+      }
+    };
+  }, [isConnected, actions]);
 
   useEffect(() => {
-    const unsubscribeMessages = on("new_message", (data) => {
+    const unsubscribeMessages = actions.on("new_message", (data) => {
       setUserChats((prevChats) => {
         const existingChat = prevChats.find((chat) => chat.id === data.chat_id);
 
@@ -73,7 +89,7 @@ export default function Chat() {
     return () => {
       unsubscribeMessages();
     };
-  }, [on, user]);
+  }, [user, actions]);
 
   const handleSearchUser = async (email: string) => {
     const user = await searchUser(email);

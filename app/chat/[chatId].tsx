@@ -1,7 +1,7 @@
-import { useWebSocket } from "@/hooks/use-websocket";
+import { useWebSocketStore } from "@/store/websocket-store";
 import { useAuthStore } from "@/store/auth-store";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
 import type { Message } from "@/types/chat-types";
@@ -34,36 +34,60 @@ export default function ChatPage() {
     };
   }, [chatId, getChat]);
 
-  const [typingUsers, setTypingUsers] = useState<any[]>([]);
+  useEffect(() => {
+    // Cleanup the timer when the component unmounts
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+
+  // Refs to manage typing state and debounce timer
+  const typingTimeoutRef = useRef<number | null>(null);
+  const isCurrentlyTyping = useRef(false);
+
   const handleTyping = () => {
-    sendTyping(chatId);
+    // If a timer is already running, clear it.
+    // This means the user is still typing.
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // If we haven't notified that the user is typing yet,
+    // send the event and mark them as typing.
+    if (!isCurrentlyTyping.current) {
+      isCurrentlyTyping.current = true;
+      actions.sendTyping(chatId);
+    }
+
+    // Set a new timer. If this timer completes, it means the user
+    // has stopped typing for 2 seconds.
+    typingTimeoutRef.current = setTimeout(() => {
+      isCurrentlyTyping.current = false;
+    }, 2000); // 2 seconds of inactivity
   };
 
   const { user } = useAuthStore();
-  const {
-    isConnected,
-    subscribeToChat,
-    unsubscribeFromChat,
-    on,
-    sendTyping,
-    sendMessage,
-  } = useWebSocket(user!.id);
+  const { isConnected, actions } = useWebSocketStore();
 
   useEffect(() => {
     if (isConnected) {
-      subscribeToChat(chatId);
+      actions.subscribeToChat(chatId);
     }
 
     return () => {
       if (isConnected) {
-        unsubscribeFromChat(chatId);
+        actions.unsubscribeFromChat(chatId);
       }
     };
-  }, [chatId, isConnected, subscribeToChat, unsubscribeFromChat]);
+  }, [chatId, isConnected, actions]);
 
   useEffect(() => {
     // Handle new messages from other users
-    const unsubscribeMessages = on("new_message", (data) => {
+    const unsubscribeMessages = actions.on("new_message", (data) => {
       if (data.chat_id === chatId) {
         setMessages((previousMessages) =>
           GiftedChat.append(previousMessages, [
@@ -82,18 +106,14 @@ export default function ChatPage() {
     });
 
     // Handle typing indicators
-    const unsubscribeTyping = on("typing", (data) => {
+    const unsubscribeTyping = actions.on("typing", (data) => {
       if (data.chat_id === chatId) {
-        setTypingUsers((prev) => {
-          if (!prev.includes(data.user_id)) {
-            return [...prev, data.user_id];
-          }
-          return prev;
-        });
+        setIsTyping(true);
 
         // Remove typing indicator after 3 seconds
         setTimeout(() => {
-          setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
+          // setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
+          setIsTyping(false);
         }, 3000);
       }
     });
@@ -102,20 +122,20 @@ export default function ChatPage() {
       unsubscribeMessages();
       unsubscribeTyping();
     };
-  }, [chatId, on]);
+  }, [chatId, actions]);
 
   const onSend = useCallback(
     (messages: Message[] = []) => {
       const content = {
         message: messages[0].text,
       };
-      sendMessage(chatId, content);
+      actions.sendMessage(chatId, content);
       // Optimistically update the UI with the new message
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, messages),
       );
     },
-    [chatId, sendMessage],
+    [chatId, actions],
   );
 
   return (
@@ -131,6 +151,10 @@ export default function ChatPage() {
         }}
         messages={messages}
         onSend={(messages) => onSend(messages as any)}
+        onInputTextChanged={() => {
+          handleTyping();
+        }}
+        isTyping={isTyping}
         user={{
           _id: user!.id,
           avatar:

@@ -1,5 +1,4 @@
 import { WS_URL } from "@/utlis/constants";
-import { useCallback, useEffect, useState } from "react";
 
 // Define types for better safety and autocompletion
 type MessageHandler = (data: any) => void;
@@ -12,7 +11,7 @@ interface WebSocketMessage {
 
 class WebSocketManager {
   private ws: WebSocket | null = null;
-  private userId: string | null = null;
+  private token: string | null = null;
   public isConnected: boolean = false;
   private messageHandlers = new Map<string, MessageHandler[]>();
   private reconnectAttempts = 0;
@@ -23,8 +22,8 @@ class WebSocketManager {
   // Callback to notify React hooks about connection status changes
   public onConnectionChange: ConnectionChangeCallback | null = null;
 
-  connect(userId: string, wsUrl = WS_URL) {
-    if (this.ws && this.isConnected && this.userId === userId) {
+  connect(token: string, wsUrl = WS_URL) {
+    if (this.ws && this.isConnected && this.token === token) {
       console.log("WebSocket ya conectado para este usuario.");
       return;
     }
@@ -33,11 +32,11 @@ class WebSocketManager {
       this.disconnect();
     }
 
-    this.userId = userId;
+    this.token = token;
     // this.reconnectAttempts = 0; // Reset attempts for a new connection
 
     try {
-      this.ws = new WebSocket(`${wsUrl}/ws/${userId}`);
+      this.ws = new WebSocket(`${wsUrl}/ws?token=${token}`);
 
       this.ws.onopen = () => {
         console.log("WebSocket conectado");
@@ -76,8 +75,8 @@ class WebSocketManager {
   }
 
   private handleReconnect() {
-    if (!this.userId) {
-      console.log("No hay ID de usuario para reconectar.");
+    if (!this.token) {
+      console.log("No hay token del usuario para reconectar.");
       return;
     }
 
@@ -91,9 +90,9 @@ class WebSocketManager {
         }) en ${delay / 1000}s`,
       );
       setTimeout(() => {
-        if (this.userId) {
+        if (this.token) {
           // Check if userId is still set
-          this.connect(this.userId);
+          this.connect(this.token);
         }
       }, delay);
     } else {
@@ -167,68 +166,9 @@ class WebSocketManager {
       this.ws = null;
     }
     this.isConnected = false;
-    this.userId = null;
+    this.token = null;
   }
 }
 
 // Create a single, shared instance of the WebSocketManager (Singleton pattern)
-const webSocketManager = new WebSocketManager();
-
-// Custom hook to interact with the singleton WebSocketManager
-export const useWebSocket = (userId: string | null) => {
-  const [isConnected, setIsConnected] = useState(webSocketManager.isConnected);
-
-  useEffect(() => {
-    // The hook's responsibility is to listen for connection changes
-    const connectionListener = (connected: boolean) => {
-      setIsConnected(connected);
-    };
-    webSocketManager.onConnectionChange = connectionListener;
-
-    // If a userId is provided, ensure the connection is active
-    if (userId) {
-      webSocketManager.connect(userId);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      // We don't disconnect here because the connection is shared across the app.
-      // Disconnection should be handled explicitly (e.g., on user logout).
-      // We just clean up the listener for this specific component.
-      webSocketManager.onConnectionChange = null;
-    };
-  }, [userId]);
-
-  // Memoize returned functions for performance, preventing unnecessary re-renders
-  const subscribeToChat = useCallback(
-    (chatId: string) => webSocketManager.subscribeToChat(chatId),
-    [],
-  );
-  const unsubscribeFromChat = useCallback(
-    (chatId: string) => webSocketManager.unsubscribeFromChat(chatId),
-    [],
-  );
-  const sendMessage = useCallback(
-    (chatId: string, content: { message: string }) =>
-      webSocketManager.sendMessage(chatId, content),
-    [],
-  );
-  const sendTyping = useCallback(
-    (chatId: string) => webSocketManager.sendTyping(chatId),
-    [],
-  );
-  const on = useCallback(
-    (messageType: string, handler: MessageHandler) =>
-      webSocketManager.on(messageType, handler),
-    [],
-  );
-
-  return {
-    isConnected,
-    subscribeToChat,
-    unsubscribeFromChat,
-    sendMessage,
-    sendTyping,
-    on,
-  };
-};
+export const webSocketManager = new WebSocketManager();

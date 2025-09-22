@@ -12,6 +12,7 @@ export const searchUser = async (email: string) => {
     }
 
     const user = (await response.json()) as User;
+    console.log(user);
 
     return user;
   } catch (error) {
@@ -50,9 +51,10 @@ export const createNewChat = async (receiver_user_email: string) => {
 };
 
 export const getChat = async (chatId: string) => {
+  // Get all chat history by id
   try {
     const { fetchWithAuth } = useAuthStore.getState();
-    const res = await fetchWithAuth(`${BASE_URL}/chat/record/${chatId}`, {});
+    const res = await fetchWithAuth(`${BASE_URL}/chat/${chatId}`, {});
 
     if (!res.ok) {
       const errorBody = await res.json();
@@ -80,10 +82,11 @@ export const getChat = async (chatId: string) => {
   }
 };
 
-export const getUserChats = async () => {
+export const getChats = async () => {
+  // Get some information of all chat that the user have
   try {
     const { fetchWithAuth } = useAuthStore.getState();
-    const res = await fetchWithAuth(`${BASE_URL}/chat/user`, {});
+    const res = await fetchWithAuth(`${BASE_URL}/chat`, {});
 
     if (!res.ok) {
       const errorBody = await res.text();

@@ -3,7 +3,7 @@ import {
   createNewChat as createNewChatService,
   searchUser as searchUserService,
   getChat as getChatService,
-  getUserChats as getUserChatsService,
+  getChats as getChatsService,
 } from "@/services/chat-service";
 
 export const useChat = () => {
@@ -19,14 +19,14 @@ export const useChat = () => {
     return getChatService(chatId);
   }, []);
 
-  const getUserChats = useCallback(async () => {
-    return getUserChatsService();
+  const getChats = useCallback(async () => {
+    return getChatsService();
   }, []);
 
   return {
     createNewChat,
     searchUser,
     getChat,
-    getUserChats,
+    getChats,
   };
 };
