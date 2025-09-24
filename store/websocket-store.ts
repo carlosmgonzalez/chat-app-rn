@@ -1,6 +1,7 @@
 import { webSocketManager } from "@/services/websocket-service";
 import { create } from "zustand";
 import { useAuthStore } from "./auth-store";
+import { User } from "@/types/user-types";
 
 interface WebSocketState {
   isConnected: boolean;
@@ -11,6 +12,7 @@ interface WebSocketState {
     unsubscribeFromChat: (chatId: string) => void;
     sendMessage: (chatId: string, content: { message: string }) => void;
     sendTyping: (chatId: string) => void;
+    sendNewChat: (chatId: string, content: { user: User }) => void;
     on: (messageType: string, handler: (data: any) => void) => () => void;
   };
 }
@@ -33,6 +35,9 @@ export const useWebSocketStore = create<WebSocketState>()((set) => ({
     },
     unsubscribeFromChat: (chatId) => {
       webSocketManager.unsubscribeFromChat(chatId);
+    },
+    sendNewChat: (chatId, content) => {
+      webSocketManager.newChat(chatId, content);
     },
     sendMessage: (chatId, content) => {
       webSocketManager.sendMessage(chatId, content);

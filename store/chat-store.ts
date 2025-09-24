@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getChats } from "@/services/chat-service";
+import { fetchChats } from "@/services/chat-service";
 import { UserChats } from "@/types/chat-types";
 
 interface ChatState {
@@ -18,7 +18,7 @@ export const useChatStore = create<ChatState>()((set) => {
     fetchUserChats: async () => {
       set({ isLoading: true, error: null });
       try {
-        const chats = await getChats();
+        const chats = await fetchChats();
         set({ userChats: chats, isLoading: false });
       } catch (error) {
         set({ isLoading: false, error: "Failed to fetch user chats" });

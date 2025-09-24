@@ -1,16 +1,13 @@
 import { useAuthStore } from "@/store/auth-store";
-import { useChatStore } from "@/store/chat-store";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function Profile() {
   const { user, logout } = useAuthStore();
-  const { cleanUserChat } = useChatStore();
 
   const handleLogout = () => {
     logout();
-    cleanUserChat();
-    router.push("/");
+    router.replace("/");
   };
 
   return (

@@ -1,3 +1,4 @@
+import { User } from "@/types/user-types";
 import { WS_URL } from "@/utlis/constants";
 
 // Define types for better safety and autocompletion
@@ -148,6 +149,17 @@ class WebSocketManager {
 
   unsubscribeFromChat(chatId: string) {
     this.send({ type: "unsubscribe_chat", chat_id: chatId });
+  }
+
+  newChat(chatId: string, content: { user: User }) {
+    this.send({
+      type: "new_chat",
+      receiver_user: {
+        id: content.user.id,
+        name: content.user.name,
+        email: content.user.email,
+      },
+    });
   }
 
   sendMessage(chatId: string, content: { message: string }) {
