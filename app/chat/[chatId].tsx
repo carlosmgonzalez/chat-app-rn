@@ -9,8 +9,15 @@ import { useChat } from "@/hooks/use-chat";
 import { ArrowLeft } from "lucide-react-native";
 
 export default function ChatPage() {
-  const { chatId, receiverUserId }: { chatId: string; receiverUserId: string } =
-    useLocalSearchParams();
+  const {
+    chatId,
+    receiverUserId,
+    receiverUserName,
+  }: {
+    chatId: string;
+    receiverUserId: string;
+    receiverUserName: string;
+  } = useLocalSearchParams();
 
   const { user } = useAuthStore();
   const { isConnected, actions } = useWebSocketStore();
@@ -19,7 +26,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [realChatId, setRealChatId] = useState<string | null>(null);
   const [isNewChat, setIsNewChat] = useState(false);
-  const [receiverUserName, setReceiverUserName] = useState<string | null>(null);
 
   // Verificar si es un chat nuevo o existente
   useEffect(() => {
@@ -32,13 +38,6 @@ export default function ChatPage() {
             // Si existe, usar el chat real pero SIN navegar
             setRealChatId(existingChat.id);
             setIsNewChat(false);
-
-            const userName = existingChat.users.find(
-              (u) => u.id === receiverUserId,
-            )?.name;
-            if (userName) {
-              setReceiverUserName(userName);
-            }
           }
         })
         .catch((error) => {
@@ -152,6 +151,7 @@ export default function ChatPage() {
           const content = {
             message: messageText,
           };
+
           actions.sendMessage(realChatId, content);
 
           setMessages((previousMessages) =>

@@ -72,10 +72,29 @@ export default function Chat() {
   }, [isConnected, actions]);
 
   useEffect(() => {
-    actions.on("new_chat", (data) => {
-      // if (data.chat)
+    const newChat = actions.on("new_chat", (data) => {
+      console.log("Nuevo chat recibido:", data);
+      setUserChats((prev) => [
+        ...prev,
+        {
+          id: data.chat_id,
+          users: [
+            { id: user!.id, email: user!.email, name: user!.name },
+            {
+              id: data.sender_user.id, // Cambiado de receiver_user a sender_user
+              email: data.sender_user.email,
+              name: data.sender_user.name,
+            },
+          ],
+          created_at: new Date(),
+        },
+      ]);
     });
-  }, [actions]);
+
+    return () => {
+      newChat();
+    };
+  }, [actions, user]);
 
   const handleSearchUser = async (email: string) => {
     const user = await searchUser(email);
@@ -120,6 +139,7 @@ export default function Chat() {
               params: {
                 chatId: existingChat?.id || "new",
                 receiverUserId: userFound.id,
+                receiverUserName: userFound.name,
               },
             });
           }}
@@ -163,6 +183,7 @@ export default function Chat() {
                       params: {
                         chatId: chat.id,
                         receiverUserId: receiverUser.id,
+                        receiverUserName: receiverUser.name,
                       },
                     });
                   }}
@@ -170,8 +191,8 @@ export default function Chat() {
                     backgroundColor: "rgba(230,230,230,0.6)",
                     borderRadius: 8,
                     marginBottom: 10,
-                    paddingVertical: 6,
-                    paddingHorizontal: 8,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
                     flexDirection: "row",
                     width: "100%",
                     alignItems: "center",

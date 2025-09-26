@@ -154,6 +154,7 @@ class WebSocketManager {
   newChat(chatId: string, content: { user: User }) {
     this.send({
       type: "new_chat",
+      chat_id: chatId,
       receiver_user: {
         id: content.user.id,
         name: content.user.name,

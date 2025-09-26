@@ -59,10 +59,8 @@ export const getChat = async (chatId: string) => {
     const response = await fetchWithAuth(`${BASE_URL}/chat/${chatId}`, {});
 
     if (!response.ok) {
-      const errorBody = await response.json();
-      throw new Error(
-        `Failed to get chat history: ${response.status} ${errorBody.detail}`,
-      );
+      console.log(`Failed to get chat history: ${response.status}`);
+      return [];
     }
 
     const chat = (await response.json()) as Chat;
@@ -90,9 +88,9 @@ export const fetchChats = async () => {
     const { fetchWithAuth } = useAuthStore.getState();
     const response = await fetchWithAuth(`${BASE_URL}/chat/`, {});
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`Failed to get chats: ${response.status} ${errorBody}`);
+    if (response.status === 404) {
+      console.log("Not found any chat");
+      return [];
     }
 
     const chats = (await response.json()) as UserChats[];
