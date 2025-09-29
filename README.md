@@ -1,50 +1,73 @@
-# Welcome to your Expo app 👋
+# Chat App RN
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📹 Demo
 
-## Get started
+Puedes ver una demostración de la funcionalidad de la aplicación en el siguiente video:
 
-1. Install dependencies
+[https://youtu.be/LcIah3_qzkA](https://youtu.be/LcIah3_qzkA)
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Español
 
-   ```bash
-   npx expo start
-   ```
+Esta es una aplicación de chat en tiempo real desarrollada con React Native y Expo.
 
-In the output, you'll find options to open the app in a
+### Descripción
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Una aplicación de mensajería móvil que permite a los usuarios registrarse, buscar a otros por su correo electrónico e iniciar conversaciones en tiempo real. La comunicación es instantánea gracias al uso de WebSockets, y la autenticación se gestiona de forma segura con JWT.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Características
 
-## Get a fresh project
+*   **Autenticación de Usuarios:** Sistema de autenticación seguro mediante JSON Web Tokens (JWT).
+*   **Búsqueda de Usuarios:** Encuentra y contacta a otros usuarios buscando su dirección de correo electrónico.
+*   **Chat en Tiempo Real:** Conversaciones fluidas y en tiempo real gracias a la implementación de WebSockets.
+*   **Historial de Chat:** Todas las conversaciones se guardan de forma persistente en una base de datos PostgreSQL.
 
-When you're ready, run:
+### Arquitectura y Tecnologías
 
-```bash
-npm run reset-project
-```
+#### Frontend (React Native)
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+La aplicación móvil está construida con **React Native** y **Expo**, permitiendo un desarrollo rápido y multiplataforma (iOS y Android).
 
-## Learn more
+*   **Enrutamiento:** Se utiliza **Expo Router** para gestionar la navegación de la aplicación de forma declarativa y basada en el sistema de archivos.
+*   **Lenguaje:** El código está escrito en **TypeScript** para garantizar un desarrollo robusto y escalable.
+*   **Gestor de Paquetes:** Se usa **Bun** para una gestión de dependencias rápida y eficiente.
+*   **Builds y Despliegue:** **Expo Application Services (EAS)** se utiliza para construir y distribuir la aplicación.
+*   **Gestión de Estado:** La aplicación maneja el estado global a través de stores dedicados para la autenticación, los chats y la conexión WebSocket.
 
-To learn more about developing your project with Expo, look at the following resources:
+#### Backend
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+El backend está desarrollado con **FastAPI**, un moderno y rápido framework de Python, que gestiona la lógica de negocio, la autenticación y la comunicación en tiempo real. La persistencia de datos se realiza en una base de datos **PostgreSQL**.
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## English
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This is a real-time chat application developed with React Native and Expo.
+
+### Description
+
+A mobile messaging application that allows users to register, search for others by their email, and start real-time conversations. Communication is instant thanks to the use of WebSockets, and authentication is securely managed with JWT.
+
+### Features
+
+*   **User Authentication:** Secure authentication system using JSON Web Tokens (JWT).
+*   **User Search:** Find and contact other users by searching for their email address.
+*   **Real-Time Chat:** Smooth, real-time conversations thanks to the implementation of WebSockets.
+*   **Chat History:** All conversations are persistently stored in a PostgreSQL database.
+
+### Architecture and Technologies
+
+#### Frontend (React Native)
+
+The mobile application is built with **React Native** and **Expo**, enabling rapid, cross-platform development (iOS and Android).
+
+*   **Routing:** **Expo Router** is used to manage application navigation declaratively and based on the file system.
+*   **Language:** The code is written in **TypeScript** to ensure robust and scalable development.
+*   **Package Manager:** **Bun** is used for fast and efficient dependency management.
+*   **Builds and Deployment:** **Expo Application Services (EAS)** is used to build and distribute the application.
+*   **State Management:** The application handles global state through dedicated stores for authentication, chats, and the WebSocket connection.
+
+#### Backend
+
+The backend is developed with **FastAPI**, a modern and fast Python framework, which manages business logic, authentication, and real-time communication. Data persistence is handled by a **PostgreSQL** database.

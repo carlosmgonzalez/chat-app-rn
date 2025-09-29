@@ -21,6 +21,7 @@ export default function Index() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
+  const [successful, setSuccessful] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -37,12 +38,16 @@ export default function Index() {
       !userInfo.email.trim() ||
       !userInfo.password.trim()
     ) {
-      return handleErrorMessage("you must complete all fields");
+      return handleErrorMessage("You must complete all fields");
     }
 
     setIsLoading(true);
     try {
       await register(userInfo.name, userInfo.email, userInfo.password);
+      setSuccessful(true);
+      setTimeout(() => {
+        setSuccessful(false);
+      }, 2000);
 
       setUserInfo({
         name: "",
@@ -148,6 +153,16 @@ export default function Index() {
             }}
           >
             {errorMessage}
+          </Text>
+        )}
+        {successful && (
+          <Text
+            style={{
+              color: "#37823f",
+              fontWeight: "bold",
+            }}
+          >
+            Successfully registered
           </Text>
         )}
         <TouchableOpacity

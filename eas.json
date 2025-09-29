@@ -9,7 +9,10 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BASE_URL": "https://chat-app-backend-fastapi-production.up.railway.app"
+      }
     },
     "production": {
       "autoIncrement": true
